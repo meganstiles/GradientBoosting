@@ -12,6 +12,8 @@ signals<- files[grep('signalOutput', files)]
 #List output codes for files we want
 codes<- list( 'WWCH7S', 'DV6QAZ', 'OVDCHI', '90QZ3I', 'X055EX', '4XCVKI')
 name <- "modelPredictions-coco_3_cv_3_netAng_30_twc_10_tfidfNoPro_pronoun_bin_1-"
+
+#Read in initial file
 df<- read.csv(paste0(name, 'EOXXVP' , '.csv' ))
 
 #Read in Files and concatenate DF
@@ -33,7 +35,8 @@ df_clean<- df_clean[!duplicated(df_clean[,1]),]
 #gradient Boosting
 require(xgboost)
 library(caret)
-#Reset Rank Levels
+
+#Reset Rank Levels, for xgboost in multiclass classification, the classes are (0, num_class) so we subtract one from rank
 df_clean$rank<- df_clean$rank - 1
 
 #Set Rank as Factor
@@ -69,7 +72,7 @@ for (i in 1:10) {
   test_Y = as.matrix(test$rank)
   
   #train Model
-  model <- xgboost(param=param, data=train_X, label=train_Y, nrounds=5)
+  model <- xgboost(param=param, data=train_X, label=train_Y, nrounds=6)
   
   #Make predictions based on model for testing set
   predictions<- predict(model, test_X)
@@ -77,7 +80,7 @@ for (i in 1:10) {
   # reshape it to a num_class-columns matrix
   pred <- matrix(predictions, ncol=9, byrow=TRUE)
   
-  # convert the probabilities to softmax labels
+  # convert the probabilities to softmax labels (we have to subtract  one)
   pred_labels <- max.col(pred) - 1
   
   for (j in 1: length(test_Y)) {
@@ -97,4 +100,4 @@ for (i in 1:10) {
 }
 
 Total_Accuracy = mean(raw_accuracy)
-Total_Accuracy #0.99
+Total_Accuracy 
